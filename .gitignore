@@ -1,0 +1,5 @@
+# build files.
+/sparkpipeline/target/
+
+# config files.
+.vscode/
