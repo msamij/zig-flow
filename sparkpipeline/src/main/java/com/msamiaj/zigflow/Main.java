@@ -1,16 +1,16 @@
 package com.msamiaj.zigflow;
 
+import java.nio.file.Paths;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.msamiaj.zigflow.ingestion.Ingestion;
 import com.msamiaj.zigflow.preprocessing.Preprocessing;
-import com.msamiaj.zigflow.utils.OutputDirConfig;
 import com.msamiaj.zigflow.utils.Settings;
 
 /**
@@ -26,18 +26,20 @@ public class Main {
 
     public static void main(String[] args) {
         SparkSession spark = SparkSession.builder().appName("zigflow").master("local[*]").getOrCreate();
+
         SparkConf conf = spark.sparkContext().conf();
-        conf.set("spark.driver.memory", "3g");
-        conf.set("spark.executer.memory", "3g");
+        conf.set("spark.driver.memory", "2g");
+        conf.set("spark.executor.memory", "4g");
 
         spark.sparkContext().setCheckpointDir(Settings.checkpointPath);
 
         ingestion = new Ingestion(spark);
-        ingestion.ingestCombinedDataFiles().ingestMovieTitlesFile();
 
         // Dataframes that have not been parsed or transformed yet!
-        Dataset<Row> combinedDatasetUnionRaw = ingestion.getCombinedDatasetUnion();
-        Dataset<Row> movieTitlesDatasetRaw = ingestion.getMovieTitlesDataset();
+        Dataset<Row> combinedDatasetUnionRaw = ingestion.ingestCombinedDataFiles();
+        Dataset<Row> movieTitlesDatasetRaw = ingestion.ingestMovieTitlesFile();
+
+        combinedDatasetUnionRaw.checkpoint();
 
         combinedDatasetUnionRaw.show(10, false);
         combinedDatasetUnionRaw.printSchema();
@@ -50,49 +52,48 @@ public class Main {
         Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
         logger.info("***Combined dataset union that has been parsed***.");
-
-        // combinedDatasetUnionParsed.repartition(20);
-        // combinedDatasetUnionParsed.persist(StorageLevel.MEMORY_ONLY_SER());
         combinedDatasetUnionParsed.show(80, false);
         combinedDatasetUnionParsed.printSchema();
 
         logger.info("***Movie titles dataset that have been parsed***.");
-
-        // movieTitlesDatasetParsed.cache();
         movieTitlesDatasetParsed.show(80, false);
         movieTitlesDatasetParsed.printSchema();
 
-        Dataset<Row> combinedDatasetDescStats = combinedDatasetUnionParsed.describe("Rating");
-        // // Dataset<Row> ratingDistribution =
-        // // combinedDatasetUnionParsed.groupBy("Rating").count();
+        // Dataset<Row> combinedDatasetDescStats =
+        // combinedDatasetUnionParsed.describe("Rating");
+        // // // Dataset<Row> ratingDistribution =
+        // // // combinedDatasetUnionParsed.groupBy("Rating").count();
 
         // logger.info("***Describing combinedDatasetUnionParsed on Rating column***");
-        // // combinedDatasetDescStats.persist(StorageLevel.DISK_ONLY());
-        combinedDatasetDescStats.show();
+        // combinedDatasetDescStats.show();
 
-        // // logger.info("***Describing rating distributions***");
-        // // ratingDistribution.persist(StorageLevel.DISK_ONLY());
-        // // ratingDistribution.show();
+        // // // logger.info("***Describing rating distributions***");
+        // // // ratingDistribution.persist(StorageLevel.DISK_ONLY());
+        // // // ratingDistribution.show();
 
-        logger.info("***Writing datasets for visualization***");
+        // logger.info("***Writing datasets for visualization***");
+        // // combinedDatasetDescStats.coalesce(1).write().csv(Settings.outputPath +
+        // // "/combinedDatasetsDescStats");
+
+        // combinedDatasetDescStats.coalesce(1).write()
+        // .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetsDescStats").toString());
+
         // ratingDistribution.coalesce(1).write().csv(Settings.outputPath +
         // "/ratingsDistribution");
-        combinedDatasetDescStats.coalesce(1).write().csv(Settings.outputPath + "/combinedDatasetsDescStats");
 
-        // Dataset<Row> joinedDataset = Preprocessing.performLargeJoin(
-        // combinedDatasetUnionParsed,
-        // movieTitlesDatasetParsed);
-
-        // logger.info("***No of partitions for joinedDataset***: " +
-        // joinedDataset.rdd().getNumPartitions());
-
-        // // joinedDataset.rdd().checkpoint();
-        // // joinedDataset.cache();
+        Dataset<Row> joinedDataset = Preprocessing.performLargeJoin(
+                combinedDatasetUnionParsed,
+                movieTitlesDatasetParsed);
 
         // joinedDataset.show(10, false);
+        // joinedDataset.coalesce(1).write().csv(Paths.get(Settings.outputPath).resolve("joinedDataset").toString());
+        // joinedDataset.printSchema();
+
+        // OutputDirConfig.renameOutputfiles("joinedDataset", "csv", "joined_dataset");
 
         // OutputDirConfig.renameOutputfiles("combinedDatasetsDescStats", "csv",
         // "combined_dataset_desc_stats.csv");
+
         // OutputDirConfig.renameOutputfiles("ratingsDistribution", "csv",
         // "rating_distribution.csv");
 

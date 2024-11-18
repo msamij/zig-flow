@@ -5,7 +5,11 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-public class Schema {
+// Can we convert this to record?
+public final class Schema {
+	private Schema() {
+	}
+
 	public static StructType getCombinedDatasetSchema() {
 		return new StructType(new StructField[] {
 				new StructField("MovieID", DataTypes.IntegerType, false, Metadata.empty()),

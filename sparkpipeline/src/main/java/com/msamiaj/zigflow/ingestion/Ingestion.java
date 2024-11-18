@@ -1,5 +1,7 @@
 package com.msamiaj.zigflow.ingestion;
 
+import java.nio.file.Paths;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -7,51 +9,41 @@ import org.apache.spark.sql.SparkSession;
 import com.msamiaj.zigflow.utils.Settings;
 
 public class Ingestion {
-	private SparkSession spark;
-
-	private Dataset<Row> combinedData1;
-	private Dataset<Row> combinedData2;
-	private Dataset<Row> combinedData3;
-	private Dataset<Row> combinedData4;
-	private Dataset<Row> movieTitlesDataset;
-	private Dataset<Row> combinedDatasetUnion;
+	private final SparkSession spark;
 
 	public Ingestion(final SparkSession spark) {
 		this.spark = spark;
 	}
 
-	private Dataset<Row> loadDataset(String filePath, String fileType) {
-		return spark.read().format(fileType).load(filePath);
+	private Dataset<Row> loadCombinedDataset(String filePath, String fileExt) {
+		return spark.read().format(fileExt).load(filePath);
 	}
 
-	public Ingestion ingestCombinedDataFiles() {
-		combinedData1 = loadDataset(Settings.datasetsPath + "/combined_data_1.txt", "text");
-		combinedData2 = loadDataset(Settings.datasetsPath + "/combined_data_2.txt", "text");
-		combinedData3 = loadDataset(Settings.datasetsPath + "/combined_data_3.txt", "text");
-		combinedData4 = loadDataset(Settings.datasetsPath + "/combined_data_4.txt", "text");
+	public Dataset<Row> ingestCombinedDataFiles() {
+		Dataset<Row> combinedData1 = loadCombinedDataset(
+				Paths.get(Settings.datasetsPath).resolve("combined_data_1.txt").toString(), "text");
 
-		combinedDatasetUnion = combinedData1
-				.unionByName(combinedData2, false)
+		Dataset<Row> combinedData2 = loadCombinedDataset(
+				Paths.get(Settings.datasetsPath).resolve("combined_data_2.txt").toString(), "text");
+
+		Dataset<Row> combinedData3 = loadCombinedDataset(
+				Paths.get(Settings.datasetsPath).resolve("combined_data_3.txt").toString(), "text");
+
+		Dataset<Row> combinedData4 = loadCombinedDataset(
+				Paths.get(Settings.datasetsPath).resolve("combined_data_4.txt").toString(), "text");
+
+		return combinedData1.unionByName(combinedData2, false)
 				.unionByName(combinedData3, false)
 				.unionByName(combinedData4, false);
-		return this;
+
 	}
 
-	public Ingestion ingestMovieTitlesFile() {
-		movieTitlesDataset = spark.read()
+	public Dataset<Row> ingestMovieTitlesFile() {
+		return spark.read()
 				.option("inferSchema", "true")
 				.option("header", "false")
 				.option("delimiter", "\t")
 				.option("multiline", "true")
-				.csv(Settings.datasetsPath + "/movie_titles.csv");
-		return this;
-	}
-
-	public Dataset<Row> getMovieTitlesDataset() {
-		return movieTitlesDataset != null ? movieTitlesDataset : null;
-	}
-
-	public Dataset<Row> getCombinedDatasetUnion() {
-		return combinedDatasetUnion != null ? combinedDatasetUnion : null;
+				.csv(Paths.get(Settings.datasetsPath).resolve("movie_titles.csv").toString());
 	}
 }

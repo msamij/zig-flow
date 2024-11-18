@@ -1,6 +1,7 @@
 package com.msamiaj.zigflow.utils;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 public final class OutputDirConfig {
 	private OutputDirConfig() {
@@ -14,14 +15,20 @@ public final class OutputDirConfig {
 	 * @param outFileNewName  New name for the file.
 	 */
 	public static void renameOutputfiles(String sourceOutFolder, String outFileExt, String outFileNewName) {
-		File dir = new File(Settings.outputPath + "/" + sourceOutFolder);
+		final String outputFile = outFileNewName + "." + outFileExt;
+		File dir = new File(
+				Paths.get(Settings.outputPath).resolve(sourceOutFolder).toString());
 		if (dir.isDirectory()) {
 			for (File file : dir.listFiles()) {
 				if (file.getName().endsWith("." + outFileExt)) {
-					file.renameTo(new File(Settings.outputPath + "/" + outFileNewName));
+					file.renameTo(new File(Paths.get(Settings.outputPath)
+							.resolve(outputFile).toString()));
 					break;
 				}
 			}
 		}
 	}
 }
+
+// File dir = new File(Settings.outputPath + "/" + sourceOutFolder);
+// file.renameTo(new File(Settings.outputPath + "/" + outFileNewName));
