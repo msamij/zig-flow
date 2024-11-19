@@ -1,5 +1,6 @@
 package com.msamiaj.zigflow.preprocessing;
 
+import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.date_format;
 
 import java.sql.Date;
@@ -73,21 +74,43 @@ public class Preprocessing {
 					return rows.iterator();
 				}, Encoders.row(Schema.getMovieTitleDatasetSchema()));
 
+		parsedDataset = sanityCheckMovieTitlesDataset(parsedDataset);
+		parsedDataset.show(10);
 		return parsedDataset;
+	}
+
+	// private static Dataset<Row> sanityCheckCombinedDataset(Dataset<Row> dataset)
+	// {
+	// return dataset.filter(col("MovieID").isNotNull()
+	// .and(col("CustomerID").isNotNull())
+	// .and(col("Rating").isNotNull())
+	// .and(col("Date").isNotNull()))
+
+	// .filter(col("MovieID").notEqual("NULL")
+	// .and(col("CustomerID").notEqual("NULL"))
+	// .and(col("Rating").notEqual("NULL"))
+	// .and(col("Date").notEqual("NULL")));
+	// }
+
+	private static Dataset<Row> sanityCheckMovieTitlesDataset(Dataset<Row> dataset) {
+		return dataset.filter((col("YearOfRelease").notEqual("NULL")));
 	}
 
 	/**
 	 * Perform inner join and build a large dataset based on MovieID column.
 	 * 
-	 * @param combinedParsedDataset    Dataframe of combined dataset that have been
-	 *                                 parsed.
-	 * @param movieTitlesParsedDataset Dataframe of movie titles dataset that have
-	 *                                 been parsed.
+	 * @param aggregatedcombinedDataset Dataframe of combined dataset that
+	 *                                  have been
+	 *                                  parsed.
+	 * @param movieTitlesParsedDataset  Dataframe of movie titles dataset that
+	 *                                  have
+	 *                                  been parsed.
 	 * @return a dataframe of combined dataset that have been joined with movie
 	 *         titles dataset based on "MovieID" column.
 	 */
-	public static Dataset<Row> performLargeJoin(Dataset<Row> combinedParsedDataset,
+	public static Dataset<Row> performLargeJoin(
+			Dataset<Row> aggregatedcombinedDataset,
 			Dataset<Row> movieTitlesParsedDataset) {
-		return combinedParsedDataset.join(movieTitlesParsedDataset, "MovieID");
+		return aggregatedcombinedDataset.join(movieTitlesParsedDataset, "MovieID");
 	}
 }

@@ -1,16 +1,21 @@
 package com.msamiaj.zigflow;
 
+import static org.apache.spark.sql.functions.avg;
+import static org.apache.spark.sql.functions.count;
+
 import java.nio.file.Paths;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.msamiaj.zigflow.ingestion.Ingestion;
 import com.msamiaj.zigflow.preprocessing.Preprocessing;
+import com.msamiaj.zigflow.utils.OutputDirConfig;
 import com.msamiaj.zigflow.utils.Settings;
 
 /**
@@ -21,93 +26,121 @@ import com.msamiaj.zigflow.utils.Settings;
  * 5:
  */
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    private static Ingestion ingestion;
+        private static Ingestion ingestion;
+        private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) {
-        SparkSession spark = SparkSession.builder().appName("zigflow").master("local[*]").getOrCreate();
+        public static void main(String[] args) {
+                SparkConf conf = new SparkConf()
+                                .setAppName("zigflow")
+                                .setMaster("local")
+                                .set("spark.driver.memory", "2g")
+                                .set("spark.executor.memory", "4g");
 
-        SparkConf conf = spark.sparkContext().conf();
-        conf.set("spark.driver.memory", "2g");
-        conf.set("spark.executor.memory", "4g");
+                SparkSession spark = SparkSession.builder().config(conf).getOrCreate();
+                spark.sparkContext().setCheckpointDir(Settings.checkpointPath);
 
-        spark.sparkContext().setCheckpointDir(Settings.checkpointPath);
+                ingestion = new Ingestion(spark);
 
-        ingestion = new Ingestion(spark);
+                // Dataframes that have not been parsed or transformed yet!
+                Dataset<Row> combinedDatasetUnionRaw = ingestion.ingestCombinedDataFiles();
+                Dataset<Row> movieTitlesDatasetRaw = ingestion.ingestMovieTitlesFile();
 
-        // Dataframes that have not been parsed or transformed yet!
-        Dataset<Row> combinedDatasetUnionRaw = ingestion.ingestCombinedDataFiles();
-        Dataset<Row> movieTitlesDatasetRaw = ingestion.ingestMovieTitlesFile();
+                // Spark now stores the DAG containing transformations for Dataframes!
+                Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
+                Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
-        combinedDatasetUnionRaw.checkpoint();
+                logger.info("***Adding persist to combinedDatasetUnionParsed***");
+                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY());
 
-        combinedDatasetUnionRaw.show(10, false);
-        combinedDatasetUnionRaw.printSchema();
+                logger.info("***Adding persist to movieTitlesDatasetParsed***");
+                movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY());
 
-        movieTitlesDatasetRaw.show(10, false);
-        movieTitlesDatasetRaw.printSchema();
+                // Triggers the persist!
+                combinedDatasetUnionParsed.count();
+                movieTitlesDatasetParsed.count();
 
-        // // Dataframes are now tansfomed into structured form.
-        Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
-        Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
+                // Get's average rating for each movie and rating count (i.e no of rating each
+                // movie had received).
+                Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
+                                .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
 
-        logger.info("***Combined dataset union that has been parsed***.");
-        combinedDatasetUnionParsed.show(80, false);
-        combinedDatasetUnionParsed.printSchema();
+                aggAvgRatingCombinedDataset.show(20, false);
+                // Get the descriptive stats for Rating col, stdDev, mean, min, max etc.
+                Dataset<Row> combinedDatasetRatingStats = combinedDatasetUnionParsed.describe("Rating");
 
-        logger.info("***Movie titles dataset that have been parsed***.");
-        movieTitlesDatasetParsed.show(80, false);
-        movieTitlesDatasetParsed.printSchema();
+                // Get's the rating distribution, i.e how much count each rating value have.
+                Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();
 
-        // Dataset<Row> combinedDatasetDescStats =
-        // combinedDatasetUnionParsed.describe("Rating");
-        // // // Dataset<Row> ratingDistribution =
-        // // // combinedDatasetUnionParsed.groupBy("Rating").count();
+                // Build's a very large dataset by combining both the combined and movie tiles
+                // dataset after they have been parsed.
+                Dataset<Row> combineAndMovieTitlesJoinedDataset = Preprocessing.performLargeJoin(
+                                combinedDatasetUnionParsed,
+                                movieTitlesDatasetParsed);
 
-        // logger.info("***Describing combinedDatasetUnionParsed on Rating column***");
-        // combinedDatasetDescStats.show();
+                Dataset<Row> aggAvgRatingJoinedDataset = Preprocessing.performLargeJoin(
+                                aggAvgRatingCombinedDataset,
+                                movieTitlesDatasetParsed);
 
-        // // // logger.info("***Describing rating distributions***");
-        // // // ratingDistribution.persist(StorageLevel.DISK_ONLY());
-        // // // ratingDistribution.show();
+                aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY());
+                aggAvgRatingJoinedDataset.show(20, false);
 
-        // logger.info("***Writing datasets for visualization***");
-        // // combinedDatasetDescStats.coalesce(1).write().csv(Settings.outputPath +
-        // // "/combinedDatasetsDescStats");
+                Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
+                                .groupBy("YearOfRelease")
+                                .count()
+                                .orderBy("YearOfRelease");
 
-        // combinedDatasetDescStats.coalesce(1).write()
-        // .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetsDescStats").toString());
+                logger.info("***Writing combineAndMovieTitlesJoinedDataset***");
+                combineAndMovieTitlesJoinedDataset
+                                .coalesce(1)
+                                .write()
+                                .option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve("combineAndMovieTitlesJoinedDataset")
+                                                .toString());
 
-        // ratingDistribution.coalesce(1).write().csv(Settings.outputPath +
-        // "/ratingsDistribution");
+                logger.info("***Writing combinedDatasetRatingStats for visualization***");
+                combinedDatasetRatingStats
+                                .coalesce(1)
+                                .write()
+                                .option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingStats").toString());
 
-        Dataset<Row> joinedDataset = Preprocessing.performLargeJoin(
-                combinedDatasetUnionParsed,
-                movieTitlesDatasetParsed);
+                logger.info("***Writing combinedDatasetRatingDistribution for visualization***");
+                combinedDatasetRatingDistribution
+                                .coalesce(1)
+                                .write()
+                                .option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingDistribution")
+                                                .toString());
 
-        // joinedDataset.show(10, false);
-        // joinedDataset.coalesce(1).write().csv(Paths.get(Settings.outputPath).resolve("joinedDataset").toString());
-        // joinedDataset.printSchema();
+                logger.info("***Writing aggAvgRatingJoinedDataset for visualization***");
+                aggAvgRatingJoinedDataset
+                                .coalesce(1)
+                                .write()
+                                .option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve("aggAvgRatingJoinedDataset").toString());
 
-        // OutputDirConfig.renameOutputfiles("joinedDataset", "csv", "joined_dataset");
+                logger.info("***Writing yearOfReleaseDistribution for visualization***");
+                yearOfReleaseDistribution
+                                .coalesce(1)
+                                .write()
+                                .option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve("yearOfReleaseDistribution").toString());
 
-        // OutputDirConfig.renameOutputfiles("combinedDatasetsDescStats", "csv",
-        // "combined_dataset_desc_stats.csv");
+                logger.info("***Renaming output files***");
 
-        // OutputDirConfig.renameOutputfiles("ratingsDistribution", "csv",
-        // "rating_distribution.csv");
+                OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset", "csv",
+                                "combined_and_movie_titles");
 
-        // Option<String> checkPointFile = joinedDataset.rdd().getCheckpointFile();
-        // if (checkPointFile.isDefined()) {
-        // logger.info("***Checkpoint is defined at***: " + checkPointFile.get());
-        // }
+                OutputDirConfig.renameOutputfiles("combinedDatasetRatingStats", "csv",
+                                "combined_dataset_rating_stats");
 
-        // joinedDataset.printSchema();
-        // logger.info("***No of rows for joinedDataset***:" + joinedDataset.count());
+                OutputDirConfig.renameOutputfiles("combinedDatasetRatingDistribution", "csv",
+                                "combined_dataset_rating_distribution");
 
-        // joinedDataset
-        // .filter("MovieID IS NULL OR CustomerID IS NULL OR Rating IS NULL OR Date IS
-        // NULL OR YearOfRelease IS NULL OR Title IS NULL")
-        // .show();
-    }
+                OutputDirConfig.renameOutputfiles("aggAvgRatingJoinedDataset", "csv",
+                                "agg_avg_rating_joined");
+
+                OutputDirConfig.renameOutputfiles("yearOfReleaseDistribution", "csv",
+                                "year_of_release_distribution");
+        }
 }

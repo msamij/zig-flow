@@ -5,9 +5,9 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-// Can we convert this to record?
 public final class Schema {
 	private Schema() {
+		throw new UnsupportedOperationException("Schema class must not be instantiated!");
 	}
 
 	public static StructType getCombinedDatasetSchema() {

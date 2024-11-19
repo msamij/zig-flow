@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 
 public final class OutputDirConfig {
 	private OutputDirConfig() {
+		throw new UnsupportedOperationException("OutputDirConfig class must not be instantiated!");
 	}
 
 	/**
@@ -22,13 +23,10 @@ public final class OutputDirConfig {
 			for (File file : dir.listFiles()) {
 				if (file.getName().endsWith("." + outFileExt)) {
 					file.renameTo(new File(Paths.get(Settings.outputPath)
-							.resolve(outputFile).toString()));
-					break;
-				}
+							.resolve(sourceOutFolder).resolve(outputFile).toString()));
+				} else
+					file.delete();
 			}
 		}
 	}
 }
-
-// File dir = new File(Settings.outputPath + "/" + sourceOutFolder);
-// file.renameTo(new File(Settings.outputPath + "/" + outFileNewName));
