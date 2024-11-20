@@ -75,7 +75,6 @@ public class Preprocessing {
 				}, Encoders.row(Schema.getMovieTitleDatasetSchema()));
 
 		parsedDataset = sanityCheckMovieTitlesDataset(parsedDataset);
-		parsedDataset.show(10);
 		return parsedDataset;
 	}
 

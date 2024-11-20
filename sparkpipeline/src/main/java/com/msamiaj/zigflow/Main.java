@@ -64,7 +64,6 @@ public class Main {
                 Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
                                 .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
 
-                aggAvgRatingCombinedDataset.show(20, false);
                 // Get the descriptive stats for Rating col, stdDev, mean, min, max etc.
                 Dataset<Row> combinedDatasetRatingStats = combinedDatasetUnionParsed.describe("Rating");
 
@@ -77,12 +76,14 @@ public class Main {
                                 combinedDatasetUnionParsed,
                                 movieTitlesDatasetParsed);
 
+                // Build's a large dataset containing information about each movie and it's avg
+                // rating.
                 Dataset<Row> aggAvgRatingJoinedDataset = Preprocessing.performLargeJoin(
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
                 aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY());
-                aggAvgRatingJoinedDataset.show(20, false);
+                aggAvgRatingJoinedDataset.count();
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
                                 .groupBy("YearOfRelease")
@@ -102,7 +103,8 @@ public class Main {
                                 .coalesce(1)
                                 .write()
                                 .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingStats").toString());
+                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingStats")
+                                                .toString());
 
                 logger.info("***Writing combinedDatasetRatingDistribution for visualization***");
                 combinedDatasetRatingDistribution
@@ -117,19 +119,22 @@ public class Main {
                                 .coalesce(1)
                                 .write()
                                 .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("aggAvgRatingJoinedDataset").toString());
+                                .csv(Paths.get(Settings.outputPath).resolve("aggAvgRatingJoinedDataset")
+                                                .toString());
 
                 logger.info("***Writing yearOfReleaseDistribution for visualization***");
                 yearOfReleaseDistribution
                                 .coalesce(1)
                                 .write()
                                 .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("yearOfReleaseDistribution").toString());
+                                .csv(Paths.get(Settings.outputPath).resolve("yearOfReleaseDistribution")
+                                                .toString());
 
                 logger.info("***Renaming output files***");
 
-                OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset", "csv",
-                                "combined_and_movie_titles");
+                OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset",
+                                "csv",
+                                "combined_and_movie_titles_joined");
 
                 OutputDirConfig.renameOutputfiles("combinedDatasetRatingStats", "csv",
                                 "combined_dataset_rating_stats");
@@ -138,7 +143,7 @@ public class Main {
                                 "combined_dataset_rating_distribution");
 
                 OutputDirConfig.renameOutputfiles("aggAvgRatingJoinedDataset", "csv",
-                                "agg_avg_rating_joined");
+                                "agg_avg_rating_joinedDataset");
 
                 OutputDirConfig.renameOutputfiles("yearOfReleaseDistribution", "csv",
                                 "year_of_release_distribution");
