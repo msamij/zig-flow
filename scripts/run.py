@@ -5,8 +5,6 @@ PROJECT_ROOT = Path.cwd()
 SPARK_PIPELINE = PROJECT_ROOT.joinpath('sparkpipeline')
 TARGET_FOLDER = PROJECT_ROOT.joinpath(SPARK_PIPELINE).joinpath('target')
 
-jar_file: str
-
 
 def find_jar_file() -> str:
     for file in TARGET_FOLDER.iterdir():
@@ -17,7 +15,7 @@ def find_jar_file() -> str:
 
 
 def run_maven() -> None:
-    """Run Maven validate install and package command"""
+    """Executes the maven commands validate, install and package command."""
     command = 'mvn validate && mvn clean && mvn install && mvn package'
     try:
         print('***Running mvn commands***')

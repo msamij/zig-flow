@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
@@ -90,61 +91,22 @@ public class Main {
                                 .count()
                                 .orderBy("YearOfRelease");
 
-                writeProcessedDatasetsToDisk(
-                                combineAndMovieTitlesJoinedDataset,
-                                combinedDatasetRatingStats,
-                                combinedDatasetRatingDistribution,
-                                aggAvgRatingJoinedDataset,
-                                yearOfReleaseDistribution);
+                writeProcessedDatasetsToDisk(combineAndMovieTitlesJoinedDataset, "combineAndMovieTitlesJoinedDataset");
+
+                writeProcessedDatasetsToDisk(combinedDatasetRatingStats, "combinedDatasetRatingStats");
+
+                writeProcessedDatasetsToDisk(combinedDatasetRatingDistribution, "combinedDatasetRatingDistribution");
+
+                writeProcessedDatasetsToDisk(aggAvgRatingJoinedDataset, "aggAvgRatingJoinedDataset");
+
+                writeProcessedDatasetsToDisk(yearOfReleaseDistribution, "yearOfReleaseDistribution");
+
                 renameOutputfiles();
         }
 
-        static void writeProcessedDatasetsToDisk(
-                        Dataset<Row> combineAndMovieTitlesJoinedDataset,
-                        Dataset<Row> combinedDatasetRatingStats,
-                        Dataset<Row> combinedDatasetRatingDistribution,
-                        Dataset<Row> aggAvgRatingJoinedDataset,
-                        Dataset<Row> yearOfReleaseDistribution) {
-
-                logger.info("***Writing combineAndMovieTitlesJoinedDataset***");
-                combineAndMovieTitlesJoinedDataset
-                                .coalesce(1)
-                                .write()
-                                .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("combineAndMovieTitlesJoinedDataset")
-                                                .toString());
-
-                logger.info("***Writing combinedDatasetRatingStats for visualization***");
-                combinedDatasetRatingStats
-                                .coalesce(1)
-                                .write()
-                                .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingStats")
-                                                .toString());
-
-                logger.info("***Writing combinedDatasetRatingDistribution for visualization***");
-                combinedDatasetRatingDistribution
-                                .coalesce(1)
-                                .write()
-                                .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("combinedDatasetRatingDistribution")
-                                                .toString());
-
-                logger.info("***Writing aggAvgRatingJoinedDataset for visualization***");
-                aggAvgRatingJoinedDataset
-                                .coalesce(1)
-                                .write()
-                                .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("aggAvgRatingJoinedDataset")
-                                                .toString());
-
-                logger.info("***Writing yearOfReleaseDistribution for visualization***");
-                yearOfReleaseDistribution
-                                .coalesce(1)
-                                .write()
-                                .option("header", "true")
-                                .csv(Paths.get(Settings.outputPath).resolve("yearOfReleaseDistribution")
-                                                .toString());
+        static void writeProcessedDatasetsToDisk(Dataset<Row> dataset, String outputFolder) {
+                dataset.coalesce(1).write().mode(SaveMode.Overwrite).option("header", "true")
+                                .csv(Paths.get(Settings.outputPath).resolve(outputFolder).toString());
         }
 
         static void renameOutputfiles() {

@@ -26,6 +26,8 @@
 
 ## Running the application:
 
+### First install python packages from requirements.txt file by creating a virtual environment in project root.
+
 ### Download the dataset and extract it to project root/datasets
 
 #### 1. To run the standalone Spark Java pipeline:
@@ -34,10 +36,19 @@
 
 1. Java 17 or above.
 2. Apache spark 3.5.1 or above.
-3. Python 3.x.x
+3. Python 3.9 or above.
 
-When in project root run the following python script.
+#### Then run the following when in project root.
 
 ```shell
 python scripts/run.py
+```
+
+#### 2. To run the pipeline with the scheduler:
+
+When in project root run the following python file.
+**I have scheduled the pipeline to run every 20 minutes.**
+
+```shell
+python scheduler/scheduler.py
 ```
