@@ -49,10 +49,10 @@ public class Main {
                 Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
                 Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
-                logger.info("***Adding persist to combinedDatasetUnionParsed***");
+                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
                 combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY());
 
-                logger.info("***Adding persist to movieTitlesDatasetParsed***");
+                logger.info("***Persisting movieTitlesDatasetParsed to disk***");
                 movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY());
 
                 // Triggers the persist!
@@ -89,6 +89,22 @@ public class Main {
                                 .groupBy("YearOfRelease")
                                 .count()
                                 .orderBy("YearOfRelease");
+
+                writeProcessedDatasetsToDisk(
+                                combineAndMovieTitlesJoinedDataset,
+                                combinedDatasetRatingStats,
+                                combinedDatasetRatingDistribution,
+                                aggAvgRatingJoinedDataset,
+                                yearOfReleaseDistribution);
+                renameOutputfiles();
+        }
+
+        static void writeProcessedDatasetsToDisk(
+                        Dataset<Row> combineAndMovieTitlesJoinedDataset,
+                        Dataset<Row> combinedDatasetRatingStats,
+                        Dataset<Row> combinedDatasetRatingDistribution,
+                        Dataset<Row> aggAvgRatingJoinedDataset,
+                        Dataset<Row> yearOfReleaseDistribution) {
 
                 logger.info("***Writing combineAndMovieTitlesJoinedDataset***");
                 combineAndMovieTitlesJoinedDataset
@@ -129,11 +145,11 @@ public class Main {
                                 .option("header", "true")
                                 .csv(Paths.get(Settings.outputPath).resolve("yearOfReleaseDistribution")
                                                 .toString());
+        }
 
+        static void renameOutputfiles() {
                 logger.info("***Renaming output files***");
-
-                OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset",
-                                "csv",
+                OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset", "csv",
                                 "combined_and_movie_titles_joined");
 
                 OutputDirConfig.renameOutputfiles("combinedDatasetRatingStats", "csv",

@@ -1,35 +1,41 @@
-import streamlit as st
+from pathlib import Path
 import pandas as pd
+import streamlit as st
 
-output_path = '../output/'
+PROJECT_ROOT = Path.cwd().parent
+OUTPUT_FOLDER = PROJECT_ROOT.joinpath('output')
 
-year_of_release_distribution_file_path = output_path + \
-    'yearOfReleaseDistribution/year_of_release_distribution.csv'
-combined_dataset_rating_stats = output_path + \
-    'combinedDatasetRatingStats/combined_dataset_rating_stats.csv'
-combined_dataset_rating_distribution = output_path + \
-    'combinedDatasetRatingDistribution/combined_dataset_rating_distribution.csv'
+rating_stats = OUTPUT_FOLDER.joinpath('combinedDatasetRatingStats').joinpath(
+    'combined_dataset_rating_stats.csv')
+
+year_of_release_distribution = OUTPUT_FOLDER.joinpath(
+    'yearOfReleaseDistribution').joinpath(
+    'year_of_release_distribution.csv')
+
+rating_distribution = OUTPUT_FOLDER.joinpath(
+    'combinedDatasetRatingDistribution').joinpath(
+    'combined_dataset_rating_distribution.csv')
 
 
-def plot_combined_dataset_desc_stats() -> None:
-    df = pd.read_csv(combined_dataset_rating_stats,
-                     header=None, names=['Summary', 'Rating'])
-    st.line_chart(data=df, x='Rating', y='Summary')
+def plot_rating_desc_stats() -> None:
+    df = pd.read_csv(rating_stats, header=None, names=['Summary', 'Rating'])
+    st.scatter_chart(data=df, x='Rating', y='Summary',
+                     color=['#c1121f'], size=150)
 
 
 def plot_year_of_release_distribution() -> None:
-    df = pd.read_csv(year_of_release_distribution_file_path,
+    df = pd.read_csv(year_of_release_distribution,
                      header=None, names=['YearOfRelease', 'Count'])
-    st.scatter_chart(data=df, x='YearOfRelease', y='Count', size=120)
+    st.line_chart(data=df, x='YearOfRelease', y='Count')
 
 
-def plot_combined_dataset_rating_distribution() -> None:
-    df = pd.read_csv(combined_dataset_rating_distribution,
+def plot_rating_distribution() -> None:
+    df = pd.read_csv(rating_distribution,
                      header=None, names=['Rating', 'Count'])
-    st.bar_chart(data=df, x='Rating', y='Count', color=['#f6ae2d'])
+    st.line_chart(data=df, x='Rating', y='Count', color=['#f2e8cf'])
 
 
 if __name__ == "__main__":
+    plot_rating_desc_stats()
+    plot_rating_distribution()
     plot_year_of_release_distribution()
-    plot_combined_dataset_desc_stats()
-    plot_combined_dataset_rating_distribution()
