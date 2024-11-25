@@ -52,3 +52,22 @@ When in project root run the following python file.
 ```shell
 python scheduler/scheduler.py
 ```
+
+#### 2. To manage all the dependecies of the sparkpipeline I've created a Dockerfile in project root to run the pipeline via docker.
+
+#### Run the following when project root to build the image and run the container.
+
+```shell
+sudo docker build -t sparkpipeline:latest .
+
+sudo docker run -it --name sparkpipeline-container sparkpipeline
+
+# When inside the docker container run the following to run spark pipeline.
+cd sparkpipeline
+
+mvn clean install
+
+mvn package
+
+spark-submit com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
+```
