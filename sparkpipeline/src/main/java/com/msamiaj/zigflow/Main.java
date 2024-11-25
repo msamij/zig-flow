@@ -19,13 +19,6 @@ import com.msamiaj.zigflow.preprocessing.Preprocessing;
 import com.msamiaj.zigflow.utils.OutputDirConfig;
 import com.msamiaj.zigflow.utils.Settings;
 
-/**
- * 1: Analysis.
- * 2: SparkConf and SparkContext and what's is used.
- * 3: Caching.
- * 4: Deployment.
- * 5:
- */
 public class Main {
         private static Ingestion ingestion;
         private static final Logger logger = LoggerFactory.getLogger(Main.class);

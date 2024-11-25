@@ -78,18 +78,17 @@ public class Preprocessing {
 		return parsedDataset;
 	}
 
-	// private static Dataset<Row> sanityCheckCombinedDataset(Dataset<Row> dataset)
-	// {
-	// return dataset.filter(col("MovieID").isNotNull()
-	// .and(col("CustomerID").isNotNull())
-	// .and(col("Rating").isNotNull())
-	// .and(col("Date").isNotNull()))
+	private static Dataset<Row> sanityCheckCombinedDataset(Dataset<Row> dataset) {
+		return dataset.filter(col("MovieID").isNotNull()
+				.and(col("CustomerID").isNotNull())
+				.and(col("Rating").isNotNull())
+				.and(col("Date").isNotNull()))
 
-	// .filter(col("MovieID").notEqual("NULL")
-	// .and(col("CustomerID").notEqual("NULL"))
-	// .and(col("Rating").notEqual("NULL"))
-	// .and(col("Date").notEqual("NULL")));
-	// }
+				.filter(col("MovieID").notEqual("NULL")
+						.and(col("CustomerID").notEqual("NULL"))
+						.and(col("Rating").notEqual("NULL"))
+						.and(col("Date").notEqual("NULL")));
+	}
 
 	private static Dataset<Row> sanityCheckMovieTitlesDataset(Dataset<Row> dataset) {
 		return dataset.filter((col("YearOfRelease").notEqual("NULL")));
