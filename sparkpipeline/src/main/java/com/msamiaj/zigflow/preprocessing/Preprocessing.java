@@ -78,6 +78,7 @@ public class Preprocessing {
 		return parsedDataset;
 	}
 
+	@SuppressWarnings("unused")
 	private static Dataset<Row> sanityCheckCombinedDataset(Dataset<Row> dataset) {
 		return dataset.filter(col("MovieID").isNotNull()
 				.and(col("CustomerID").isNotNull())
