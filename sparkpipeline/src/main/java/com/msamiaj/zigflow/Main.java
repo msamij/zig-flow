@@ -76,6 +76,7 @@ public class Main {
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
+                // Triggers the persist!
                 aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY());
                 aggAvgRatingJoinedDataset.count();
 
