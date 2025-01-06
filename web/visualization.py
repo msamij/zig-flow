@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-PROJECT_ROOT = Path.cwd().parent
+PROJECT_ROOT = Path.cwd()
 OUTPUT_FOLDER = PROJECT_ROOT.joinpath('output')
 
 rating_stats = OUTPUT_FOLDER.joinpath('combinedDatasetRatingStats').joinpath(

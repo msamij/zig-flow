@@ -28,9 +28,20 @@
 
 ### First install python packages from requirements.txt file by creating a virtual environment in project root.
 
+```shell
+# 1. Creates an environment.
+python3 -m venv .venv
+
+# 2. Activate the environment.
+source .venv/bin/activate
+
+# 3. Install packages.
+pip install -r requirements.txt
+```
+
 ### Download the dataset and extract it to project root/datasets
 
-#### 1. To run the standalone Spark Java pipeline:
+### 1. To run the standalone Spark Java pipeline:
 
 #### Requirements:
 
@@ -44,7 +55,7 @@
 python scripts/run.py
 ```
 
-#### 2. To run the pipeline with the scheduler:
+### 2. To run the pipeline with the scheduler:
 
 When in project root run the following python file.
 **I have scheduled the pipeline to run every 20 minutes.**
@@ -53,7 +64,7 @@ When in project root run the following python file.
 python scheduler/scheduler.py
 ```
 
-#### 2. To manage all the dependecies of the sparkpipeline I've created a Dockerfile in project root to run the pipeline via docker.
+### 3. To manage all the dependecies of the sparkpipeline I've created a Dockerfile in project root to run the pipeline via docker.
 
 #### Run the following when project root to build the image and run the container.
 
@@ -70,4 +81,20 @@ mvn clean install
 mvn package
 
 spark-submit com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
+```
+
+### 4. To use plotter.
+
+#### Run the following when project root to plot the datasets.
+
+```shell
+python plot/plot.py
+```
+
+### 5. To use visualize datasets on web using streamlit.
+
+#### Run the following when project root to plot the datasets on the web.
+
+```shell
+streamlit run web/visualization.py
 ```

@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
-PROJECT_ROOT = Path.cwd().parent
+PROJECT_ROOT = Path.cwd()
 OUTPUT_FOLDER = PROJECT_ROOT.joinpath('output')
 
 
