@@ -8,7 +8,7 @@ TARGET_FOLDER = PROJECT_ROOT.joinpath(SPARK_PIPELINE).joinpath('target')
 
 def run_maven() -> None:
     """Executes the basic maven commands validate, install and package command."""
-    command = 'mvn validate && mvn clean && mvn install && mvn package'
+    command = 'mvn clean && mvn install'
     try:
         print('***Running mvn commands***')
         subprocess.run(command, cwd=SPARK_PIPELINE, shell=True, check=True)
