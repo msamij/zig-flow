@@ -43,26 +43,26 @@ public class Main {
                 Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
                 Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
-                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY());
-
-                logger.info("***Persisting movieTitlesDatasetParsed to disk***");
-                movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY());
-
-                // Triggers the persist!
-                combinedDatasetUnionParsed.count();
-                movieTitlesDatasetParsed.count();
-
                 // Get's average rating for each movie and rating count (i.e no of rating each
                 // movie had received).
                 Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
                                 .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
 
+                // Get's the rating distribution, i.e how much count each rating value have.
+                Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();
+
                 // Get the descriptive stats for Rating col, stdDev, mean, min, max etc.
                 Dataset<Row> combinedDatasetRatingStats = combinedDatasetUnionParsed.describe("Rating");
 
-                // Get's the rating distribution, i.e how much count each rating value have.
-                Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();
+                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
+                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
+
+                logger.info("***Persisting movieTitlesDatasetParsed to disk***");
+                movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY()).count();
+
+                // // Triggers the persist!
+                // combinedDatasetUnionParsed.count();
+                // movieTitlesDatasetParsed.count();
 
                 // Build's a very large dataset by combining both the combined and movie tiles
                 // dataset after they have been parsed.
@@ -76,9 +76,9 @@ public class Main {
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
-                // Triggers the persist!
-                aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY());
-                aggAvgRatingJoinedDataset.count();
+                aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY()).count();
+                // // Triggers the persist!
+                // aggAvgRatingJoinedDataset.count();
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
                                 .groupBy("YearOfRelease")
