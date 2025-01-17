@@ -76,11 +76,9 @@ sudo docker run -it --name sparkpipeline-container sparkpipeline
 # When inside the docker container run the following to run spark pipeline.
 cd sparkpipeline
 
-mvn clean install
+mvn clean & mvn install
 
-mvn package
-
-spark-submit com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
+spark-submit --class com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
 ```
 
 ### 4. To use plotter.
