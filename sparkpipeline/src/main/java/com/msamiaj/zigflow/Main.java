@@ -54,13 +54,13 @@ public class Main {
                 // Get the descriptive stats for Rating col, stdDev, mean, min, max etc.
                 Dataset<Row> combinedDatasetRatingStats = combinedDatasetUnionParsed.describe("Rating");
 
+                // Triggers the persist!
                 logger.info("***Persisting combinedDatasetUnionParsed to disk***");
                 combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
 
                 logger.info("***Persisting movieTitlesDatasetParsed to disk***");
                 movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY()).count();
 
-                // Triggers the persist!
                 // combinedDatasetUnionParsed.count();
                 // movieTitlesDatasetParsed.count();
 
@@ -76,10 +76,10 @@ public class Main {
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
+                // Triggers the persist!
                 logger.info("***Persisting aggAvgRatingJoinedDataset to disk***");
                 aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY()).count();
 
-                // Triggers the persist!
                 // aggAvgRatingJoinedDataset.count();
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
