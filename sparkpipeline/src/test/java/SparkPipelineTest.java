@@ -72,7 +72,6 @@ public class SparkPipelineTest {
 			Integer currentMovieID = null;
 
 			while (iterator.hasNext()) {
-				System.out.println(iterator.next());
 				String line = iterator.next().trim();
 
 				if (line.endsWith(":")) {

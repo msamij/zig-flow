@@ -60,7 +60,7 @@ public class Main {
                 logger.info("***Persisting movieTitlesDatasetParsed to disk***");
                 movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY()).count();
 
-                // // Triggers the persist!
+                // Triggers the persist!
                 // combinedDatasetUnionParsed.count();
                 // movieTitlesDatasetParsed.count();
 
@@ -76,8 +76,10 @@ public class Main {
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
+                logger.info("***Persisting aggAvgRatingJoinedDataset to disk***");
                 aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY()).count();
-                // // Triggers the persist!
+
+                // Triggers the persist!
                 // aggAvgRatingJoinedDataset.count();
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
