@@ -7,7 +7,7 @@
 #### Project has five components:
 
 1. Data Ingestion
-2. Efficiently processing of data sets using Apache Spark
+2. Processing of data sets using Apache Spark
 3. Analysis
 4. Storing datasets
 5. Visualization
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 1. Java 17 or above.
 2. Apache spark 3.5.1 or above.
-3. Python 3.9 or above.
+3. Python 3.x.x
 
 #### Then run the following when in project root.
 
