@@ -48,16 +48,17 @@ public class Main {
                 Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
                                 .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
 
+                // Triggers the cache!
+                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
+                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
+
                 // Get's the rating distribution, i.e how much count each rating value have.
                 Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();
 
                 // Get the descriptive stats for Rating col, stdDev, mean, min, max etc.
                 Dataset<Row> combinedDatasetRatingStats = combinedDatasetUnionParsed.describe("Rating");
 
-                // Triggers the persist!
-                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
-
+                // Triggers the cache!
                 logger.info("***Persisting movieTitlesDatasetParsed to disk***");
                 movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY()).count();
 
@@ -73,7 +74,7 @@ public class Main {
                                 aggAvgRatingCombinedDataset,
                                 movieTitlesDatasetParsed);
 
-                // Triggers the persist!
+                // Triggers the cache!
                 logger.info("***Persisting aggAvgRatingJoinedDataset to disk***");
                 aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY()).count();
 
