@@ -43,14 +43,14 @@ public class Main {
                 Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
                 Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
+                // Triggers the cache!
+                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
+                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
+
                 // Get's average rating for each movie and rating count (i.e no of rating each
                 // movie had received).
                 Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
                                 .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
-
-                // Triggers the cache!
-                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
 
                 // Get's the rating distribution, i.e how much count each rating value have.
                 Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();
