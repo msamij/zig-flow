@@ -21,16 +21,14 @@ import com.msamiaj.zigflow.utils.Settings;
 
 public class Main {
         private static Ingestion ingestion;
+        private static final String APP_NAME = "zigflow";
+        private static final String MASTER = "local";
+        private static final String DRIVER_MEMORY = "2g";
+        private static final String EXECUTOR_MEMORY = "4g";
         private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
         public static void main(String[] args) {
-                SparkConf conf = new SparkConf()
-                                .setAppName("zigflow")
-                                .setMaster("local")
-                                .set("spark.driver.memory", "2g")
-                                .set("spark.executor.memory", "4g");
-
-                SparkSession spark = SparkSession.builder().config(conf).getOrCreate();
+                SparkSession spark = getSparkSession();
                 spark.sparkContext().setCheckpointDir(Settings.checkpointPath);
 
                 ingestion = new Ingestion(spark);
@@ -45,7 +43,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                combinedDatasetUnionParsed.persist(StorageLevel.DISK_ONLY()).count();
+                persistDataset(combinedDatasetUnionParsed);
 
                 // Get's average rating for each movie and rating count (i.e no of rating each
                 // movie had received).
@@ -60,7 +58,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting movieTitlesDatasetParsed to disk***");
-                movieTitlesDatasetParsed.persist(StorageLevel.DISK_ONLY()).count();
+                persistDataset(movieTitlesDatasetParsed);
 
                 // Build's a very large dataset by combining both the combined and movie tiles
                 // dataset after they have been parsed.
@@ -76,7 +74,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting aggAvgRatingJoinedDataset to disk***");
-                aggAvgRatingJoinedDataset.persist(StorageLevel.DISK_ONLY()).count();
+                persistDataset(aggAvgRatingJoinedDataset);
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
                                 .groupBy("YearOfRelease")
@@ -96,12 +94,26 @@ public class Main {
                 renameOutputfiles();
         }
 
-        static void writeProcessedDatasetsToDisk(Dataset<Row> dataset, String outputFolder) {
+        private static SparkSession getSparkSession() {
+                SparkConf conf = new SparkConf()
+                                .setAppName(APP_NAME)
+                                .setMaster(MASTER)
+                                .set("spark.driver.memory", DRIVER_MEMORY)
+                                .set("spark.executor.memory", EXECUTOR_MEMORY);
+
+                return SparkSession.builder().config(conf).getOrCreate();
+        }
+
+        private static void persistDataset(Dataset<Row> dataset) {
+                dataset.persist(StorageLevel.DISK_ONLY()).count();
+        }
+
+        private static void writeProcessedDatasetsToDisk(Dataset<Row> dataset, String outputFolder) {
                 dataset.coalesce(1).write().mode(SaveMode.Overwrite).option("header", "true")
                                 .csv(Paths.get(Settings.outputPath).resolve(outputFolder).toString());
         }
 
-        static void renameOutputfiles() {
+        private static void renameOutputfiles() {
                 logger.info("***Renaming output files***");
                 OutputDirConfig.renameOutputfiles("combineAndMovieTitlesJoinedDataset", "csv",
                                 "combined_and_movie_titles_joined");
