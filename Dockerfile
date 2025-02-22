@@ -1,22 +1,15 @@
-FROM ubuntu:20.04
+FROM openjdk:17-jdk-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
-    openjdk-17-jdk \
     wget \
     curl \
-    git \
     bash \
     build-essential \
-    python3 \
-    python3-pip \
     && apt-get clean
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH=$JAVA_HOME/bin:$PATH
-
-ARG SPARK_VERSION=3.5.3
+ARG SPARK_VERSION=3.5.4
 ARG MAVEN_VERSION=3.9.5
 
 RUN wget https://dlcdn.apache.org/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop3.tgz -O /tmp/spark.tgz \
