@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && apt-get clean
 
-ARG SPARK_VERSION=3.5.4
+ARG SPARK_VERSION=3.5.5
 ARG MAVEN_VERSION=3.9.5
 
-RUN wget https://dlcdn.apache.org/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop3.tgz -O /tmp/spark.tgz \
+RUN wget https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop3.tgz -O /tmp/spark.tgz \
     && tar -xzvf /tmp/spark.tgz -C /opt \
     && ln -s /opt/spark-$SPARK_VERSION-bin-hadoop3 /opt/spark \
     && rm /tmp/spark.tgz \
