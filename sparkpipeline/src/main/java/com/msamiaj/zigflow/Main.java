@@ -19,17 +19,20 @@ import com.msamiaj.zigflow.preprocessing.Preprocessing;
 import com.msamiaj.zigflow.utils.OutputDirConfig;
 import com.msamiaj.zigflow.utils.Settings;
 
+@SuppressWarnings("unused")
 public class Main {
         private static Ingestion ingestion;
         private static final String APP_NAME = "zigflow";
         private static final String MASTER = "local";
-        private static final String DRIVER_MEMORY = "2g";
+        private static final String DRIVER_MEMORY = "6g";
         private static final String EXECUTOR_MEMORY = "4g";
         private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
         public static void main(String[] args) {
                 SparkSession spark = getSparkSession();
                 spark.sparkContext().setCheckpointDir(Settings.checkpointPath);
+
+                logger.info("Spark driver memory config:" + spark.sparkContext().getConf().get("spark.driver.memory"));
 
                 ingestion = new Ingestion(spark);
 
@@ -43,7 +46,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                persistDataset(combinedDatasetUnionParsed);
+                cacheDataset(combinedDatasetUnionParsed);
 
                 // Get's average rating for each movie and rating count (i.e no of rating each
                 // movie had received).
@@ -58,7 +61,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting movieTitlesDatasetParsed to disk***");
-                persistDataset(movieTitlesDatasetParsed);
+                cacheDataset(movieTitlesDatasetParsed);
 
                 // Build's a very large dataset by combining both the combined and movie tiles
                 // dataset after they have been parsed.
@@ -74,7 +77,7 @@ public class Main {
 
                 // Triggers the cache!
                 logger.info("***Persisting aggAvgRatingJoinedDataset to disk***");
-                persistDataset(aggAvgRatingJoinedDataset);
+                cacheDataset(aggAvgRatingJoinedDataset);
 
                 Dataset<Row> yearOfReleaseDistribution = aggAvgRatingJoinedDataset
                                 .groupBy("YearOfRelease")
@@ -95,17 +98,11 @@ public class Main {
         }
 
         private static SparkSession getSparkSession() {
-                SparkConf conf = new SparkConf()
-                                .setAppName(APP_NAME)
-                                .setMaster(MASTER)
-                                .set("spark.driver.memory", DRIVER_MEMORY)
-                                .set("spark.executor.memory", EXECUTOR_MEMORY);
-
-                return SparkSession.builder().config(conf).getOrCreate();
+                return SparkSession.builder().config(new SparkConf().setAppName(APP_NAME)).getOrCreate();
         }
 
-        private static void persistDataset(Dataset<Row> dataset) {
-                dataset.persist(StorageLevel.DISK_ONLY()).count();
+        private static void cacheDataset(Dataset<Row> dataset) {
+                dataset.persist(StorageLevel.MEMORY_ONLY()).count();
         }
 
         private static void writeProcessedDatasetsToDisk(Dataset<Row> dataset, String outputFolder) {

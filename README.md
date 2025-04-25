@@ -24,8 +24,9 @@
 
 **_Note_**: I've tested sparkpipeline on an Intel 4th Gen core i5 (4) cores processor having 8gb ram, to run the pipeline smoothly system must have atleat 8gb of ram you can run it on much slower system however it will take much more time for pipeline to finish processing.
 
-**_Spark Configuration_**: Can be changed in Main.java file. By modifying DRIVER_MEMORY and EXECUTOR_MEMORY constants,
-use local[*] if system have enough memory for faster processing as I am currently running this locally with single thread.
+**_Spark Configuration_**: Can be changed in [scripts/run.py](scripts/run.py) file. By modifying DRIVER_MEMORY and SPARK_MASTER constants,
+I am currently running this locally with 3 threads on same JVM process with 6gb of driver memory.
+use local[*] if your system have enough processing power for faster processing.
 
 ## Running the application
 
@@ -50,7 +51,7 @@ pip install -r requirements.txt
 
 1. Java 17 or above.
 2. Apache spark 3.5.1 or above.
-3. Python 3.x.x
+3. Python 3.8 or above.
 
 #### Then run the following when in project root
 
