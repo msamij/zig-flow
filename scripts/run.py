@@ -2,7 +2,11 @@ import subprocess
 from pathlib import Path
 import logging
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.NOTSET,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+handle = 'run.py'
+logger = logging.getLogger(handle)
 
 SPARK_MASTER = 'local[3]'
 DRIVER_MEMORY = '6g'
@@ -16,7 +20,7 @@ def run_maven() -> None:
     """Executes the basic maven commands clean, install and package command."""
     command = 'mvn clean && mvn install'
     try:
-        logger.info('***Running mvn commands (mvn clean && mvn install)***')
+        logger.info('Running mvn commands (mvn clean && mvn install)')
         subprocess.run(command, cwd=SPARK_PIPELINE, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         logger.error(f'mvn command failed: {e}')
@@ -34,7 +38,7 @@ def run_spark_submit(jar_file: str) -> None:
     class_file = 'com.msamiaj.zigflow.Main'
     command = f'spark-submit --master {SPARK_MASTER} --driver-memory {DRIVER_MEMORY} --class {class_file} {jar_file}'
     try:
-        logger.info(f'***Running spark job on master {SPARK_MASTER}***')
+        logger.info(f'Running spark job on master {SPARK_MASTER}')
         subprocess.run(command, cwd=SPARK_PIPELINE, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         logger.error(f'spark execution failed: {e}')
@@ -43,7 +47,6 @@ def run_spark_submit(jar_file: str) -> None:
 if __name__ == '__main__':
     try:
         run_maven()
-        jar_file = find_jar_file()
-        run_spark_submit(jar_file)
+        run_spark_submit(find_jar_file())
     except Exception as e:
         logger.error(f'Pipeline execution failed! {e}')
