@@ -47,8 +47,7 @@ public class Preprocessing {
 			return rows.iterator();
 		}, Encoders.row(Schema.getCombinedDatasetSchema()));
 
-		parsedDataset = parsedDataset.withColumn("Date", date_format(parsedDataset.col("Date"), "dd-MM-yyyy"));
-		return parsedDataset;
+		return parsedDataset.withColumn("Date", date_format(parsedDataset.col("Date"), "dd-MM-yyyy"));
 	}
 
 	public static Dataset<Row> processMovieTitlesDataset(Dataset<Row> movieTitlesDataset) {
@@ -74,12 +73,11 @@ public class Preprocessing {
 					return rows.iterator();
 				}, Encoders.row(Schema.getMovieTitleDatasetSchema()));
 
-		parsedDataset = sanityCheckMovieTitlesDataset(parsedDataset);
-		return parsedDataset;
+		return parsedDataset.filter((col("YearOfRelease").notEqual("NULL")));
 	}
 
 	@SuppressWarnings("unused")
-	private static Dataset<Row> sanityCheckCombinedDataset(Dataset<Row> dataset) {
+	private static Dataset<Row> filterNullColumns(Dataset<Row> dataset) {
 		return dataset.filter(col("MovieID").isNotNull()
 				.and(col("CustomerID").isNotNull())
 				.and(col("Rating").isNotNull())
@@ -91,7 +89,8 @@ public class Preprocessing {
 						.and(col("Date").notEqual("NULL")));
 	}
 
-	private static Dataset<Row> sanityCheckMovieTitlesDataset(Dataset<Row> dataset) {
+	@SuppressWarnings("unused")
+	private static Dataset<Row> filterNullYearOfRelease(Dataset<Row> dataset) {
 		return dataset.filter((col("YearOfRelease").notEqual("NULL")));
 	}
 

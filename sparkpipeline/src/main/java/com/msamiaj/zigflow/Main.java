@@ -23,7 +23,7 @@ import com.msamiaj.zigflow.utils.Settings;
 public class Main {
         private static Ingestion ingestion;
         private static final String APP_NAME = "zigflow";
-        private static final String MASTER = "local";
+        private static final String MASTER = "local[*]";
         private static final String DRIVER_MEMORY = "6g";
         private static final String EXECUTOR_MEMORY = "4g";
         private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -44,14 +44,14 @@ public class Main {
                 Dataset<Row> combinedDatasetUnionParsed = Preprocessing.processCombinedDataset(combinedDatasetUnionRaw);
                 Dataset<Row> movieTitlesDatasetParsed = Preprocessing.processMovieTitlesDataset(movieTitlesDatasetRaw);
 
-                // Triggers the cache!
-                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
-                cacheDataset(combinedDatasetUnionParsed);
-
                 // Get's average rating for each movie and rating count (i.e no of rating each
                 // movie had received).
                 Dataset<Row> aggAvgRatingCombinedDataset = combinedDatasetUnionParsed.groupBy("MovieID")
                                 .agg(avg("Rating").alias("AvgRating"), count("Rating").alias("RatingCount"));
+
+                // Triggers the cache!
+                logger.info("***Persisting combinedDatasetUnionParsed to disk***");
+                cacheDataset(combinedDatasetUnionParsed);
 
                 // Get's the rating distribution, i.e how much count each rating value have.
                 Dataset<Row> combinedDatasetRatingDistribution = combinedDatasetUnionParsed.groupBy("Rating").count();

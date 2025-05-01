@@ -5,11 +5,13 @@ import logging
 logging.basicConfig(level=logging.NOTSET,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-handle = 'run.py'
-logger = logging.getLogger(handle)
+logger = logging.getLogger('run.py')
 
-SPARK_MASTER = 'local[3]'
 DRIVER_MEMORY = '6g'
+SPARK_MASTER = 'local[3]'
+
+# Unused constant since I am running this in local mode executor memory is not required!
+EXECUTOR_MEMORY = '5g'
 
 PROJECT_ROOT = Path.cwd()
 SPARK_PIPELINE = PROJECT_ROOT.joinpath('sparkpipeline')
