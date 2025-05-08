@@ -2,3 +2,5 @@
 
 !sparkpipeline/
 !datasets/
+!Dockerfile
+!.dockerignore

@@ -5,8 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     wget \
     bash \
-    build-essential \
-    && apt-get clean
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG SPARK_VERSION=3.5.5
 ARG MAVEN_VERSION=3.9.5
