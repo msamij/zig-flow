@@ -82,7 +82,8 @@ cd sparkpipeline
 
 mvn clean & mvn install
 
-spark-submit --class com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
+# Adjust number of threads and driver memory based on system config.
+spark-submit --master local[3] --driver-memory 6g --class com.msamiaj.zigflow.Main /app/sparkpipeline/target/sparkpipeline-1.0-SNAPSHOT.jar
 ```
 
 ### 4. To use plotter
